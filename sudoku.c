@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+
 #include "sudoku.h"
 
-int SetBoard()
+int** SetBoard()
 {
     int i, j;
     int** puzzleBoard;
@@ -63,7 +63,7 @@ void PrintBoard(int** board)
     printf(" y\n");
 }
 
-bool isAvailable(int** board, int* row, int* col)
+int isAvailable(int** board, int* row, int* col)
 {
     int i, j;
     for(i = 0; i <= 8; i++)
@@ -73,28 +73,28 @@ bool isAvailable(int** board, int* row, int* col)
             if(board[i][j] == 0){
                 *row = i;
                 *col = j;
-                return true;
+                return 1;
             }
         }
     }
-    return false;
+    return 0;
 }
 
-bool isCorrect(int** board, int row, int col, int input)
+int isCorrect(int** board, int row, int col, int input)
 {
     int i, j, srow, scol;
 
     for(i = 0; i <= 8; i++)
     {
         if(board[i][col] == input){
-            return false;
+            return 0;
         }
     }
 
     for(j = 0; j <= 8; j++)
     {
         if(board[row][j] == input){
-            return false;
+            return 0;
         }
     }
 
@@ -106,20 +106,20 @@ bool isCorrect(int** board, int row, int col, int input)
         for(j = 0; j <= 2; j++)
         {
             if(board[srow + i][scol + j] == input){
-                return false;
+                return 0;
             }
         }
     }
         
-    return true;
+    return 1;
 }
 
-bool solution(int** board)
+int solution(int** board)
 {
     int i, j, input;
 
     if(!isAvailable(board, &i, &j)){
-        return true;
+        return 1;
     }
 
     for(input = 1; input <= 9; input++)
@@ -127,14 +127,14 @@ bool solution(int** board)
         if(isCorrect(board, i, j, input)){
             board[i][j] == input;
             if(solution(board)){
-                return true;
+                return 1;
             }
             else{
                 board[i][j] == 0;
             }
         }
     }
-    return false;
+    return 0;
 }
 
 int** copyBoard(int** board)
@@ -154,94 +154,77 @@ int** copyBoard(int** board)
     return newBoard;
 }
 
-void player(int** playerBoard, int** tempBoard)
-{
+void player(int** playerBoard, int** tempBoard) {
     int i, j, x, y, uinput;
     char option;
 
-    while (1)
-    {
-        if(!isAvailable(playerBoard, &i, &j))
-        {
+    while (1) {
+        if (!isAvailable(playerBoard, &i, &j)) {
             printf("\n Sudoku Board Completed! Congrats :)");
         }
-        return; 
-    }
 
-    while (1)
-    {
-        printf("\nPress Enter to continue. Press \"q\" to Quit.\n");
-        option = getchar();
-        if((option == 'q') || (option == 'Q')){
-            getchar();
-            solution(playerBoard);
-            printf("\nSOLVED PUZZLE:\n");
-            PrintBoard(playerBoard);
-            return;
+        while (1) {
+            printf("\nPress Enter to continue. Press \"q\" to Quit.\n");
+            option = getchar();
+            if ((option == 'q') || (option == 'Q')) {
+                getchar();
+                solution(playerBoard);
+                printf("\nSOLVED PUZZLE:\n");
+                PrintBoard(playerBoard);
+                return;
+            } else if ((option != '\n') && (option != 'q')) {
+                getchar();
+            } else {
+                break;
+            }
         }
-        else if((option != '\n') && (option != 'q')){
-            getchar();
-        }
-        else{
-            break;
-        }
-    }
 
-    printf("\nEnter a coordinate for the square you want to insert the value to in the following format \"x y\":\n");
-    scanf("%d %d",&x, &y);
-    while(1)
-    {
-        if ((x > 9) || (x < 1) || (y > 9) || (y < 1) || (playerBoard[y - 1][x - 1] != 0)){
-            printf("\nInvalid coordinate, please pick a new coordinate\n");
-            scanf("%d %d",&x, &y);
+        printf("\nEnter a coordinate for the square you want to insert the value to in the following format \"x y\":\n");
+        scanf("%d %d", &x, &y);
+        while (1) {
+            if ((x > 9) || (x < 1) || (y > 9) || (y < 1) || (playerBoard[y - 1][x - 1] != 0)) {
+                printf("\nInvalid coordinate, please pick a new coordinate\n");
+                scanf("%d %d", &x, &y);
+            } else {
+                x -= 1;
+                y -= 1;
+                break;
+            }
         }
-        else {
-            x -= 1;
-            y -= 1;
-            break;
+
+        printf("\nInsert a value from 1 to 9\n");
+        scanf("%d", &uinput);
+
+        while (1) {
+            if ((uinput > 9) || (uinput < 1)) {
+                printf("\nInvalid value, try again:\n");
+                scanf("%d", &uinput);
+            } else {
+                break;
+            }
         }
-    }
 
-    printf("\nInsert a value from 1 to 9\n");
-    scanf("%d", &uinput);
-
-    while(1)
-    {
-        if((uinput > 9) || (uinput < 1)){
-            printf("\nInvalid value, try again:\n");
-            scanf("%d", &uinput);
+        if (isCorrect(playerBoard, y, x, uinput)) {
+            playerBoard[y][x] = uinput;
+        } else {
+            printf("\nincorrect value for the x = %d y = %d coordinate, please try again\n", x + 1, y + 1);
         }
-        else{
-            break;
-        } 
-    }
-    
-    if(isCorrect(playerBoard, y, x, uinput))
-    {
-        playerBoard[y][x] = uinput;
-    }
-    else
-    {
-        printf("\nincorrect value for the x = %d y = %d coordinate, please try again\n",x + 1, y + 1);
-    }
 
-    for (i = 0; i < 9; i++)
-    {
-        for(j = 0; j < 9; j++)
-        {
-            tempBoard[i][j] = playerBoard[i][j];
+        for (i = 0; i < 9; i++) {
+            for (j = 0; j < 9; j++) {
+                tempBoard[i][j] = playerBoard[i][j];
+            }
         }
-    }
 
-    if(!solution(tempBoard))
-    {
-        printf("\nincorrect value for the X = %d Y = %d coordinate, please try again\n",x + 1, y + 1);
-        playerBoard[y][x] = 0;
+        if (!solution(tempBoard)) {
+            printf("\nincorrect value for the X = %d Y = %d coordinate, please try again\n", x + 1, y + 1);
+            playerBoard[y][x] = 0;
+        }
+        getchar();
+        PrintBoard(playerBoard);
+
+        return;
     }
-    getchar();
-    PrintBoard(playerBoard);
-    
-    return;
 }
 
 
